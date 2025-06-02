@@ -69,9 +69,13 @@ button:hover {
 
 .status-message {
     color: #dc3545;
-    font-size: 0.9rem;
+    font-size: 1rem;
     margin-top: 1rem;
+    padding: 1rem;
+    background-color: #fff3f3;
+    border-radius: 4px;
     display: none;
+    border: 1px solid #f5c6cb;
 }
 
 .status-message.show {
