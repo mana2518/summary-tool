@@ -68,21 +68,42 @@ async function summarizePage() {
         
         const fullText = content.join(' ').replace(/\s+/g, ' ').trim();
         
-        // 単純な要約処理
-        const sentences = fullText.split(/[。！？]/).filter(sentence => sentence.trim());
-        const importantSentences = [];
-        let currentLength = 0;
-        
-        for (const sentence of sentences) {
-            if (currentLength + sentence.length <= 200) {
-                importantSentences.push(sentence);
-                currentLength += sentence.length;
-            } else {
-                break;
-            }
+        // Gemini APIを使用して要約を生成
+        const apiKey = window.GEMINI_API_KEY;
+        if (!apiKey) {
+            throw new Error('APIキーが設定されていません');
         }
+        const model = 'gemini-pro';
         
-        const summary = importantSentences.join('。') + '。';
+        const prompt = `以下のテキストを日本語で要約してください。要約は小学生でも理解できるような簡潔な1文で、主観や感想は含めず、事実ベースで表現してください。
+
+テキスト:
+${fullText}
+
+要約:`;
+
+        const geminiResponse = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
+            },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{
+                        text: prompt
+                    }]
+                }]
+            })
+        });
+
+        if (!geminiResponse.ok) {
+            throw new Error('Gemini APIの呼び出しに失敗しました');
+        }
+
+        const data = await geminiResponse.json();
+        const summary = data.candidates[0]?.content?.parts[0]?.text || '要約を生成できませんでした';
+        
         if (summary.trim()) {
             summaryDiv.textContent = summary;
         } else {
