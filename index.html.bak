@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ウェブページ要約ツール</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>ウェブページ要約ツール</h1>
+        <div class="input-section">
+            <input type="url" id="urlInput" placeholder="URLを入力してください" required>
+            <button onclick="summarizePage()">要約する</button>
+        </div>
+        <div class="result-section">
+            <h2>要約結果</h2>
+            <div id="summary" class="summary-text"></div>
+        </div>
+        <div class="status-message"></div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
