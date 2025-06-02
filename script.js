@@ -14,11 +14,91 @@ async function summarizePage() {
         statusMessage.textContent = '';
         statusMessage.classList.remove('show');
         
-        // プロキシサーバーを通じてURLからHTMLを取得
-        const proxyUrl = 'https://your-proxy-server.com/proxy?url=' + encodeURIComponent(urlInput.value);
-        const response = await fetch(proxyUrl, {
-            method: 'GET'
+        // URLからHTMLを取得
+        const response = await fetch(urlInput.value, {
+            method: 'GET',
+            mode: 'no-cors',
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
         });
+        
+        if (!response.ok) {
+            throw new Error(`URLの読み込みに失敗しました: ${response.status}`);
+        }
+
+        // レスポンスのテキストを取得
+        let text = await response.text();
+        
+        // レスポンスが空の場合、別の方法で取得を試みる
+        if (!text) {
+            const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(urlInput.value);
+            const proxyResponse = await fetch(proxyUrl);
+            const proxyData = await proxyResponse.json();
+            text = proxyData.contents || '';
+        }
+
+        // HTMLからテキストを抽出
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(text, 'text/html');
+        
+        // メインコンテンツを抽出
+        const content = [];
+        
+        // WordPressの記事コンテンツを抽出
+        const article = doc.querySelector('article');
+        if (article) {
+            const paragraphs = article.querySelectorAll('p');
+            paragraphs.forEach(p => {
+                const text = p.textContent.trim();
+                if (text) {
+                    content.push(text);
+                }
+            });
+        }
+        
+        // 通常のHTMLコンテンツを抽出
+        if (content.length === 0) {
+            const paragraphs = doc.querySelectorAll('p');
+            paragraphs.forEach(p => {
+                const text = p.textContent.trim();
+                if (text) {
+                    content.push(text);
+                }
+            });
+        }
+        
+        if (content.length === 0) {
+            throw new Error('コンテンツが見つかりませんでした');
+        }
+        
+        const fullText = content.join(' ').replace(/\s+/g, ' ').trim();
+        
+        // 単純な要約処理
+        const sentences = fullText.split(/[。！？]/).filter(sentence => sentence.trim());
+        const importantSentences = [];
+        let currentLength = 0;
+        
+        for (const sentence of sentences) {
+            if (currentLength + sentence.length <= 200) {
+                importantSentences.push(sentence);
+                currentLength += sentence.length;
+            } else {
+                break;
+            }
+        }
+        
+        const summary = importantSentences.join('。') + '。';
+        if (summary.trim()) {
+            summaryDiv.textContent = summary;
+        } else {
+            throw new Error('要約を生成できませんでした');
+        }
+    } catch (error) {
+        statusMessage.textContent = error.message || '要約の生成に失敗しました。';
+        statusMessage.classList.add('show');
+        console.error('Error:', error);
+    }
         
         if (!response.ok) {
             throw new Error(`URLの読み込みに失敗しました: ${response.status}`);
