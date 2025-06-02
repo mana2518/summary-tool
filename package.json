@@ -1,0 +1,16 @@
+{
+  "name": "summary-tool",
+  "version": "1.0.0",
+  "description": "Web page summarization tool",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "build": "npm run build:client",
+    "build:client": "cp index.html styles.css script.js build/"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "node-fetch": "^2.6.1"
+  }
+}
