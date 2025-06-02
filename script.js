@@ -15,7 +15,12 @@ async function summarizePage() {
         statusMessage.classList.remove('show');
         
         // URLからHTMLを取得
-        const response = await fetch(urlInput.value);
+        const response = await fetch(urlInput.value, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+        });
+        
         if (!response.ok) {
             throw new Error(`URLの読み込みに失敗しました: ${response.status}`);
         }
@@ -25,10 +30,28 @@ async function summarizePage() {
         // HTMLからテキストを抽出
         const parser = new DOMParser();
         const doc = parser.parseFromString(text, 'text/html');
-        const content = doc.body.textContent || '';
+        
+        // WordPressの記事コンテンツを取得
+        const content = [];
+        const mainContent = doc.querySelector('article, .entry-content, .post-content');
+        if (mainContent) {
+            // WordPressの記事コンテンツを抽出
+            const paragraphs = mainContent.querySelectorAll('p');
+            paragraphs.forEach(p => {
+                const text = p.textContent.trim();
+                if (text) {
+                    content.push(text);
+                }
+            });
+        } else {
+            // 通常のHTMLコンテンツを抽出
+            content.push(doc.body.textContent.trim());
+        }
+        
+        const fullText = content.join(' ').replace(/\s+/g, ' ').trim();
         
         // 単純な要約処理（Gemini APIの代わり）
-        const sentences = content.split(/[。！？]/).filter(sentence => sentence.trim());
+        const sentences = fullText.split(/[。！？]/).filter(sentence => sentence.trim());
         const importantSentences = [];
         let currentLength = 0;
         
@@ -42,7 +65,11 @@ async function summarizePage() {
         }
         
         const summary = importantSentences.join('。') + '。';
-        summaryDiv.textContent = summary;
+        if (summary.trim()) {
+            summaryDiv.textContent = summary;
+        } else {
+            throw new Error('コンテンツが見つかりませんでした');
+        }
     } catch (error) {
         statusMessage.textContent = error.message || '要約の生成に失敗しました。';
         statusMessage.classList.add('show');
