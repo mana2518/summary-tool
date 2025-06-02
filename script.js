@@ -93,3 +93,30 @@ async function summarizePage() {
         console.error('Error:', error);
     }
 }
+
+// ダークモードの切り替え
+function toggleDarkMode() {
+    const html = document.documentElement;
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    const isDark = html.getAttribute('data-theme') === 'dark';
+    
+    if (isDark) {
+        html.removeAttribute('data-theme');
+        darkModeToggle.title = 'ダークモードを切り替え';
+    } else {
+        html.setAttribute('data-theme', 'dark');
+        darkModeToggle.title = 'ライトモードを切り替え';
+    }
+    
+    // ローカルストレージに保存
+    localStorage.setItem('darkMode', isDark ? 'false' : 'true');
+}
+
+// ページ読み込み時にダークモードの状態を復元
+window.addEventListener('DOMContentLoaded', () => {
+    const darkMode = localStorage.getItem('darkMode') === 'true';
+    if (darkMode) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        document.getElementById('darkModeToggle').title = 'ライトモードを切り替え';
+    }
+});
