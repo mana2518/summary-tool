@@ -1,15 +1,25 @@
 async function summarizePage() {
     const urlInput = document.getElementById('urlInput');
     const summaryDiv = document.getElementById('summary');
+    const statusMessage = document.querySelector('.status-message');
     
     if (!urlInput.value) {
-        alert('URLを入力してください');
+        statusMessage.textContent = 'URLを入力してください';
+        statusMessage.classList.add('show');
         return;
     }
-
+    
     try {
+        // ステータスメッセージをクリア
+        statusMessage.textContent = '';
+        statusMessage.classList.remove('show');
+        
         // URLからHTMLを取得
         const response = await fetch(urlInput.value);
+        if (!response.ok) {
+            throw new Error(`URLの読み込みに失敗しました: ${response.status}`);
+        }
+        
         const text = await response.text();
         
         // HTMLからテキストを抽出
@@ -34,7 +44,8 @@ async function summarizePage() {
         const summary = importantSentences.join('。') + '。';
         summaryDiv.textContent = summary;
     } catch (error) {
-        summaryDiv.textContent = '要約の生成に失敗しました。有効なURLを入力してください。';
+        statusMessage.textContent = error.message || '要約の生成に失敗しました。';
+        statusMessage.classList.add('show');
         console.error('Error:', error);
     }
 }
